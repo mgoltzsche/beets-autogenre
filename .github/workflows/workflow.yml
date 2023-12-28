@@ -1,0 +1,57 @@
+name: Build and release
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+concurrency: # Run release builds sequentially, cancel outdated PR builds
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    permissions: # Grant write access to github.token within non-pull_request builds
+      contents: write
+      id-token: write
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - id: release
+      name: Prepare release
+      uses: mgoltzsche/conventional-release@v0
+      with:
+        commit-files: setup.py
+
+    - name: Bump module version
+      if: steps.release.outputs.publish # runs only if release build
+      run: |
+        sed -Ei "s/^( +version=).+/\1'$RELEASE_VERSION',/" setup.py
+
+    - name: Unit test
+      run: make test
+
+    - name: E2E test
+      run: make test-e2e
+
+    - name: Build wheel
+      run: |
+        set -u
+        echo Building beets-ytimport wheel $RELEASE_VERSION
+        make
+
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      if: steps.release.outputs.publish # runs only if release build
+

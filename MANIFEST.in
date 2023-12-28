@@ -1,0 +1,2 @@
+include README.md
+include beetsplug/autogenre/config_default.yaml

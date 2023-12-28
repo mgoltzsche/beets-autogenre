@@ -1,0 +1,106 @@
+directory: /data/music
+library: /data/musiclibrary.db
+
+paths:
+  default: Albums/%title{$albumartist}/$album%aunique{}/$track $title
+  singleton: Singles/%title{$artist}/$title
+  comp: Compilations/$album%aunique{}/$track $title
+
+plugins:
+- autogenre
+- lastgenre
+- xtractor
+- ytimport
+- chroma
+- edit
+- info
+- describe
+- smartplaylist
+- random
+- duplicates
+- web
+
+import:
+  write: true
+  copy: true
+  incremental: true
+  quiet: false
+
+chroma:
+  auto: true
+
+ytimport:
+  directory: /data/ytimport
+
+smartplaylist:
+  relative_to: /data/playlists
+  playlist_dir: /data/playlists
+  forward_slash: false
+  playlists:
+  - name: all.m3u
+    query: ''
+  - name: all-by-genre-album.m3u
+    query: 'genre+ albumartist+ year+ album+ disc+ track+ artist+ title+'
+
+lastgenre:
+  auto: false
+  canonical: /etc/beets/genre-tree.yaml
+  prefer_specific: true
+  count: 4 # To also tag Rage Again the Machine as Hip Hop
+  source: track
+  min_weight: 15 # To prevent Amadou & Mariam from being tagged as New Wave
+  # This files picks some of the genres defined in the canonical tree.
+  # The genres listed in this files must be aligned with the playlist queries.
+  whitelist: /data/beets/genres.txt
+
+xtractor:
+  auto: no
+  dry-run: no
+  write: yes
+  threads: 4
+  force: no
+  quiet: no
+  keep_output: no
+  keep_profiles: no
+  output_path: /tmp/xtractor
+  essentia_extractor: /usr/local/bin/essentia_streaming_extractor_music
+  high_level_targets:
+    genre_rosamerica_probability: # 0..1
+      path: "highlevel.genre_rosamerica.probability"
+      type: float
+    genre_electronic:
+      path: "highlevel.genre_electronic.value"
+      type: string
+    genre_electronic_probability: # 0..1
+      path: "highlevel.genre_electronic.probability"
+      type: float
+    timbre: # "dark" or "bright"
+      path: "highlevel.timbre.value"
+      type: string
+    tonal_atonal: # "tonal" or "atonal"
+      path: "highlevel.tonal_atonal.value"
+      type: string
+    key_edma: # e.g. "C#"
+      path: "tonal.key_edma.key"
+      type: string
+    key_edma_scale: # e.g. "minor"
+      path: "tonal.key_edma.scale"
+      type: string
+  extractor_profile:
+      highlevel:
+          svm_models:
+          - /var/lib/essentia/svm-models/beta5/danceability.history
+          - /var/lib/essentia/svm-models/beta5/gender.history
+          - /var/lib/essentia/svm-models/beta5/genre_rosamerica.history
+          - /var/lib/essentia/svm-models/beta5/genre_electronic.history
+          - /var/lib/essentia/svm-models/beta5/mood_acoustic.history
+          - /var/lib/essentia/svm-models/beta5/mood_aggressive.history
+          - /var/lib/essentia/svm-models/beta5/mood_electronic.history
+          - /var/lib/essentia/svm-models/beta5/mood_happy.history
+          - /var/lib/essentia/svm-models/beta5/mood_sad.history
+          - /var/lib/essentia/svm-models/beta5/mood_party.history
+          - /var/lib/essentia/svm-models/beta5/mood_relaxed.history
+          - /var/lib/essentia/svm-models/beta5/moods_mirex.history
+          - /var/lib/essentia/svm-models/beta5/voice_instrumental.history
+          - /var/lib/essentia/svm-models/beta5/tonal_atonal.history
+          - /var/lib/essentia/svm-models/beta5/timbre.history
