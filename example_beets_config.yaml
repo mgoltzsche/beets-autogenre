@@ -88,19 +88,19 @@ xtractor:
       type: string
   extractor_profile:
       highlevel:
-          svm_models:
-          - /var/lib/essentia/svm-models/beta5/danceability.history
-          - /var/lib/essentia/svm-models/beta5/gender.history
-          - /var/lib/essentia/svm-models/beta5/genre_rosamerica.history
-          - /var/lib/essentia/svm-models/beta5/genre_electronic.history
-          - /var/lib/essentia/svm-models/beta5/mood_acoustic.history
-          - /var/lib/essentia/svm-models/beta5/mood_aggressive.history
-          - /var/lib/essentia/svm-models/beta5/mood_electronic.history
-          - /var/lib/essentia/svm-models/beta5/mood_happy.history
-          - /var/lib/essentia/svm-models/beta5/mood_sad.history
-          - /var/lib/essentia/svm-models/beta5/mood_party.history
-          - /var/lib/essentia/svm-models/beta5/mood_relaxed.history
-          - /var/lib/essentia/svm-models/beta5/moods_mirex.history
-          - /var/lib/essentia/svm-models/beta5/voice_instrumental.history
-          - /var/lib/essentia/svm-models/beta5/tonal_atonal.history
-          - /var/lib/essentia/svm-models/beta5/timbre.history
+        svm_models:
+        - /var/lib/essentia/svm-models/beta5/danceability.history
+        - /var/lib/essentia/svm-models/beta5/gender.history
+        - /var/lib/essentia/svm-models/beta5/genre_rosamerica.history
+        - /var/lib/essentia/svm-models/beta5/genre_electronic.history
+        - /var/lib/essentia/svm-models/beta5/mood_acoustic.history
+        - /var/lib/essentia/svm-models/beta5/mood_aggressive.history
+        - /var/lib/essentia/svm-models/beta5/mood_electronic.history
+        - /var/lib/essentia/svm-models/beta5/mood_happy.history
+        - /var/lib/essentia/svm-models/beta5/mood_sad.history
+        - /var/lib/essentia/svm-models/beta5/mood_party.history
+        - /var/lib/essentia/svm-models/beta5/mood_relaxed.history
+        - /var/lib/essentia/svm-models/beta5/moods_mirex.history
+        - /var/lib/essentia/svm-models/beta5/voice_instrumental.history
+        - /var/lib/essentia/svm-models/beta5/tonal_atonal.history
+        - /var/lib/essentia/svm-models/beta5/timbre.history
