@@ -226,17 +226,13 @@ class AutoGenrePlugin(BeetsPlugin):
             # Prepend electronic to genre list
             genres = ['electronic'] + [genre]
             genre_electro = ELECTRONIC_GENRES.get(genre_electronic)
-            if genre_electro:
-                if genre_electronic_probability > genre_electronic_strong:
-                    # Prepend concrete electronic sub genre to list
-                    genres = [genre_electro] + genres
-                else: # Append electronic sub genre to list
-                    genres += [genre_electro]
+            if genre_electro: # Append electronic sub genre to list
+                genres += [genre_electro]
             genre = self._list2str(genres)
 
         if genre_electronic_probability > genre_electronic_append:
             if genre_rosamerica in ('rhy', 'pop', 'hip'):
-                # Append Electronic to genre list
+                # Append electronic to genre list
                 genres = self._str2list(genre)
                 if 'electronic' not in genres:
                     genre = self._list2str(genres + ['electronic'])
