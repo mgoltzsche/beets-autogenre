@@ -217,6 +217,7 @@ class AutoGenrePlugin(BeetsPlugin):
         genre_rosamerica_strong = self.config['genre_rosamerica_strong'].get()
         genre_electronic_prepend = self.config['genre_electronic_prepend'].get()
         genre_electronic_append = self.config['genre_electronic_append'].get()
+
         if genre == 'dance':
             if genre_electronic_probability > genre_electronic_strong:
                 # Use the result of Essentia's electronic genre model
@@ -228,11 +229,16 @@ class AutoGenrePlugin(BeetsPlugin):
             if genre_electro:
                 genres += [genre_electro]
             genre = self._list2str(genres)
-        if genre_rosamerica in ('dan', 'rhy', 'pop', 'hip') and genre_electronic_probability > genre_electronic_append:
-            # Append Electronic to genre list
-            genres = self._str2list(genre)
-            if 'electronic' not in genres:
-                genre = self._list2str(genres + ['electronic'])
+
+        if genre_electronic_probability > genre_electronic_append:
+            if genre_rosamerica in ('rhy', 'pop', 'hip'):
+                # Append Electronic to genre list
+                genres = self._str2list(genre)
+                if 'electronic' not in genres:
+                    genre = self._list2str(genres + ['electronic'])
+            elif genre == 'dance':
+                genre = 'electronic'
+
         genre = self._format_genre(genre)
         msg = "[autogenre] Got essentia genre '{}' for item: {}"
         print(msg.format(genre, item))
