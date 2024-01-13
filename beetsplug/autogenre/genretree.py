@@ -32,10 +32,11 @@ class GenreTree:
         return p and self.is_genre(p, parent) or False
 
     def _canonicalize(self, genre):
-        if genre.lower() in self._whitelist:
-            return genre.lower()
-        parent = self._parentmap.get(genre.lower())
-        return parent and self._canonicalize(parent) or None
+        genre = genre.lower()
+        if genre in self._whitelist:
+            return genre
+        parent = self._parentmap.get(genre)
+        return parent and self._canonicalize(parent) or genre
 
 def _tree2parentmap(tree, r={}, parent=None):
     if isinstance(tree, str):

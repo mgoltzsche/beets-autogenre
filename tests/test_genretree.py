@@ -8,10 +8,12 @@ class TestGenreMatcher(unittest.TestCase):
             'fancy genre 1',
             {
                 'fancy genre 2': [
+                    'sub genre',
                     'sub genre 1',
                     'genre alias',
                     {
                         'sub genre 2': [
+                            'sub sub genre',
                             'sub sub genre 1',
                             'sub sub genre 2',
                             'sub sub genre 3',
@@ -26,9 +28,18 @@ class TestGenreMatcher(unittest.TestCase):
                     ],
                 },
             },
+            {
+                'none-whitelisted genre': {
+                    'none-whitelisted sub genre': [
+                        'none-whitelisted sub sub genre',
+                    ],
+                },
+            },
         ]
         genre_whitelist = [
             'fancy genre 1',
+            'sub genre',
+            'sub sub genre',
             'fancy genre 2',
             'sub genre 1',
             'sub sub genre 2',
@@ -95,9 +106,9 @@ class TestGenreMatcher(unittest.TestCase):
                 'expected': 'fancy genre 1',
             },
             {
-                'name': 'match genre without whitelisted parent',
-                'input': 'sub sub genre 4 mix',
-                'expected': 'fancy genre 2',
+                'name': 'return top-level parent genre when no whitelisted matched',
+                'input': 'none-whitelisted sub sub genre mix',
+                'expected': 'none-whitelisted genre',
             },
             {
                 'name': 'do not match genre without brackets and remix suffix',

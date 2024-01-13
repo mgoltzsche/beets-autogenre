@@ -43,8 +43,6 @@ assertGenre() {
 @test 'derive genre from album name' {
 	# Reggae Jungle Drum and Bass Mix #9 New 2022
 	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=ZisHyhD0l_4
-	# TODO: remove skip after beets-container 0.12.1 upgrade
-	skip 'requires beets-container 0.12.1'
 	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
 	beet autogenre -fa $QUERY
 	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Drum And Bass, Electronic'
@@ -63,8 +61,6 @@ assertGenre() {
 }
 
 @test 'reset manually specified genre' {
-	# TODO: remove skip after beets-container 0.12.1 upgrade
-	skip 'requires beets-container 0.12.1'
 	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
 	beet autogenre --genre= $QUERY
 	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Drum And Bass, Electronic'
