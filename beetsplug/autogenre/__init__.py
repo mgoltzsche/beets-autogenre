@@ -223,11 +223,15 @@ class AutoGenrePlugin(BeetsPlugin):
                 # Use the result of Essentia's electronic genre model
                 genre = ELECTRONIC_GENRES.get(genre_electronic)
         elif genre_rosamerica_probability < genre_rosamerica_strong and genre_electronic_probability > genre_electronic_prepend:
-            # Prepend Electronic to genre list
+            # Prepend electronic to genre list
             genres = ['electronic'] + [genre]
             genre_electro = ELECTRONIC_GENRES.get(genre_electronic)
             if genre_electro:
-                genres += [genre_electro]
+                if genre_electronic_probability > genre_electronic_strong:
+                    # Prepend concrete electronic sub genre to list
+                    genres = [genre_electro] + genres
+                else: # Append electronic sub genre to list
+                    genres += [genre_electro]
             genre = self._list2str(genres)
 
         if genre_electronic_probability > genre_electronic_append:
