@@ -3,7 +3,7 @@ all: false
 force: false
 lastgenre: true
 xtractor: true
-remix_title: true
+from_title: true
 parent_genres: true
 genre_rosamerica_strong: 0.8
 genre_electronic_strong: 0.8

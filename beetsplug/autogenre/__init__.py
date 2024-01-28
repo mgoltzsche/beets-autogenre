@@ -84,12 +84,12 @@ class AutoGenrePlugin(BeetsPlugin):
         p.add_option('--no-xtractor', action='store_false',
             default=self.config['xtractor'].get(),
             dest='xtractor', help='do not use xtractor plugin')
-        p.add_option('--remix-title', action='store_true',
-            default=self.config['remix_title'].get(),
-            dest='remix_title', help='derive genre from remix title')
-        p.add_option('--no-remix-title', action='store_false',
-            default=self.config['remix_title'].get(),
-            dest='remix_title', help='do not derive genre from remix title')
+        p.add_option('--from-title', action='store_true',
+            default=self.config['from_title'].get(),
+            dest='from_title', help='derive genre from title')
+        p.add_option('--no-from-title', action='store_false',
+            default=self.config['from_title'].get(),
+            dest='from_title', help='do not derive genre from title')
         p.add_option('--parent-genres', action='store_true',
             default=self.config['parent_genres'].get(),
             dest='parent_genres', help="add primary genre's parent genres")
@@ -149,7 +149,7 @@ class AutoGenrePlugin(BeetsPlugin):
                         genre = self._essentia_genre(item)
                         if genre is not None:
                             source = 'essentia'
-                    if opts.remix_title:
+                    if opts.from_title:
                         genre, matched = self._fix_remix_genre(item, genre, genre_tree)
                         if matched and genre is not None:
                             source = 'title'
