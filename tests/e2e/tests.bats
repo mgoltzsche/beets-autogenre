@@ -17,6 +17,31 @@ assertGenre() {
 	assertGenre "$QUERY" 'lastfm | African | African'
 }
 
+@test 'force-overwrite genre' {
+	# Amadou & Mariam - Sénégal Fast Food
+	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=J43T8rEOg-I
+	QUERY='title:Sénégal Fast Food'
+	beet modify -y $QUERY genre=fake-genre
+	beet autogenre -f $QUERY
+	assertGenre "$QUERY" 'lastfm | African | African'
+}
+
+@test 'get genre from last.fm track when remix/bootleg' {
+	# Fugees - Ready Or Not (Champion Bootleg)
+	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=ts0WO6wJB3M
+	QUERY='fugees ready or not champion bootleg'
+	beet autogenre -f $QUERY
+	assertGenre "$QUERY" 'lastfm | Drum And Bass | Drum And Bass, Electronic'
+}
+
+@test 'get genre from last.fm artist' {
+	# Bellaire - Paris City Jazz
+	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=hyVVoLy4LSc
+	QUERY='title:Paris City Jazz'
+	beet autogenre $QUERY
+	assertGenre "$QUERY" 'lastfm | House | House, Downtempo, Jazz, Electronic'
+}
+
 @test 'derive genre from track title' {
 	# Rage Against the Machine - Wake Up (Rasticles drum n bass remix)
 	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=8tl7iOWZRa8
@@ -25,11 +50,12 @@ assertGenre() {
 	assertGenre "$QUERY" 'title | Drum And Bass | Drum And Bass, Rock, Hip Hop, Electronic'
 }
 
-@test 'force-overwrite genre' {
-	QUERY='title:wake up (Rasticles drum n bass remix)'
-	beet modify -y $QUERY genre=fake-genre
-	beet autogenre -f $QUERY
-	assertGenre "$QUERY" 'title | Drum And Bass | Drum And Bass, Rock, Hip Hop, Electronic'
+@test 'derive genre from album title' {
+	# Reggae Jungle Drum and Bass Mix #9 New 2022
+	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=ZisHyhD0l_4
+	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
+	beet autogenre -fa $QUERY
+	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Drum And Bass, Electronic'
 }
 
 @test 'estimate genre using essentia' {
@@ -40,13 +66,6 @@ assertGenre() {
 	assertGenre "$QUERY" 'essentia | Electronic | Electronic, Hip Hop, House'
 }
 
-@test 'derive genre from album name' {
-	# Reggae Jungle Drum and Bass Mix #9 New 2022
-	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=ZisHyhD0l_4
-	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
-	beet autogenre -fa $QUERY
-	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Drum And Bass, Electronic'
-}
 
 @test 'specify genre manually' {
 	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'

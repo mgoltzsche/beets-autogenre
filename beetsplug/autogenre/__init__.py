@@ -56,6 +56,7 @@ class AutoGenrePlugin(BeetsPlugin):
         self._xtractor = XtractorCommand(config['xtractor'])
         self._lastgenre_conf = config['lastgenre'].get() or {}
         self._separator = self._lastgenre_conf.get('separator') or ', '
+        self._remix_regex = re.compile(r'.+[^\w](remix|bootleg)', re.IGNORECASE)
 
     def commands(self):
         p = OptionParser()
@@ -173,8 +174,25 @@ class AutoGenrePlugin(BeetsPlugin):
                 item.store()
         # TODO: match remix artist within title and get genre from artist: TITLE (ARTIST remix)
 
+    def _is_remix(self, title):
+        return self._remix_regex.match(title) is not None
+
     def _lastfm_genre(self, item):
-        genre, src = self._lastgenre._get_genre(item)
+        genre = None
+        src = None
+        source = self._lastgenre.config['source'].get()
+        if self._is_remix(item.get('title')) and source != 'track':
+            # When item is remix, get genre frpm the last.fm track.
+            # (The artist's genre would be most likely wrong / the original.
+            # E.g. 'Fugees - Ready or not (Champion Bootleg)'.
+            # For other items the album/artist source is more reliable.)
+            self._lastgenre.config['source'] = 'track'
+            try:
+                genre, src = self._lastgenre._get_genre(item)
+            finally:
+                self._lastgenre.config['source'].set(source)
+        else:
+            genre, src = self._lastgenre._get_genre(item)
         if genre:
             msg = "[autogenre] Got last.fm genre '{}' based on {} for item: {}"
             print(msg.format(genre, src, item))

@@ -5,6 +5,7 @@ A [beets](https://github.com/beetbox/beets) plugin to assign genres to all items
 ## Features
 
 * Gets genres from last.fm using the [lastgenre plugin](https://beets.readthedocs.io/en/stable/plugins/lastgenre.html).
+* Favours track as last.fm genre source when track is a remix.
 * Fallback to estimating the genre using the [xtractor plugin](https://github.com/adamjakab/BeetsPluginXtractor) / [Essentia](https://essentia.upf.edu/).
 * Fixes the genre of (re)mixes by matching the genre tree against the track and album title.
 * Allows to specify the genre per item manually.
@@ -45,7 +46,7 @@ autogenre:
 lastgenre:
   auto: false
   prefer_specific: true
-  source: track
+  source: album
   count: 4
   min_weight: 15
   canonical: /etc/beets/genre-tree.yaml

@@ -47,7 +47,7 @@ lastgenre:
   canonical: /etc/beets/genre-tree.yaml
   prefer_specific: true
   count: 4 # To also tag Rage Again the Machine as Hip Hop
-  source: track
+  source: album
   min_weight: 15 # To prevent Amadou & Mariam from being tagged as New Wave
   # This files picks some of the genres defined in the canonical tree.
   # The genres listed in this files must be aligned with the playlist queries.
