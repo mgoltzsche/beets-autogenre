@@ -37,7 +37,7 @@ autogenre:
   force: false
   lastgenre: true
   xtractor: true
-  remix_title: true
+  from_title: true
   genre_rosamerica_strong: 0.8
   genre_electronic_strong: 0.8
   genre_electronic_prepend: 0.5
@@ -129,8 +129,8 @@ Options:
   --no-lastgenre      do not use lastgenre plugin
   --xtractor          use xtractor plugin
   --no-xtractor       do not use xtractor plugin
-  --remix-title       derive genre from remix title
-  --no-remix-title    do not derive genre from remix title
+  --from-title        derive genre from title
+  --no-from-title     do not derive genre from title
   --parent-genres     add primary genre's parent genres
   --no-parent-genres  do not add primary genre's parent genres
   --genre=GENRE       specify the genre to assign to the selected items
