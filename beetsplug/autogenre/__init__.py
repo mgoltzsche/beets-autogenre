@@ -18,7 +18,7 @@ from beetsplug.autogenre.genretree import GenreTree
 # See https://essentia.upf.edu/svm_models/accuracies_v2.1_beta1.html
 ROSAMERICA_GENRES = {
     'cla': 'classical',
-    'dan': 'dance',
+    'dan': 'dance', # CAUTION: 'dance' is an out-of-tree genre: might be electronic or rock. better set genre of those tracks manually.
     'hip': 'hip hop',
     'jaz': 'jazz',
     'pop': 'pop',
@@ -38,7 +38,7 @@ SOURCES = set(('lastfm', 'title', 'essentia', 'user'))
 class AutoGenrePlugin(BeetsPlugin):
     item_types = {
         'genre_source': types.STRING,
-        'genre_primary': types.STRING,
+        'genres': types.STRING,
     }
 
     @property
@@ -56,7 +56,7 @@ class AutoGenrePlugin(BeetsPlugin):
         self._xtractor = XtractorCommand(config['xtractor'])
         self._lastgenre_conf = config['lastgenre'].get() or {}
         self._separator = self._lastgenre_conf.get('separator') or ', '
-        self._remix_regex = re.compile(r'.+[^\w](remix|bootleg)', re.IGNORECASE)
+        self._remix_regex = re.compile(r'.+[^\w](remix|bootleg|remake)', re.IGNORECASE)
 
     def commands(self):
         p = OptionParser()
@@ -125,34 +125,9 @@ class AutoGenrePlugin(BeetsPlugin):
         all = opts.all or opts.genre is not None
         force = opts.force or opts.genre is not None
         filtered_items = [item for item in items if _filter_item(item, all, force)]
-        print('[autogenre] Selected {} items for genre update...'.format(len(filtered_items)))
+        self._log.info('Selected {} items for genre update...', len(filtered_items))
         for item in items:
-            genre = item.get('genre')
-            source = item.get('genre_source')
-            genre_primary = item.get('genre_primary')
-            if _filter_item(item, all, force):
-                if opts.genre is not None:
-                    source = opts.genre and 'user' or None
-                    genre = self._format_genre(opts.genre.lower())
-                    msg = "[autogenre] Setting genre '{}' for item: {}"
-                    print(msg.format(genre, item))
-                elif source == 'user' and genre_primary:
-                    if not genre:
-                        genre = genre_primary
-                if source != 'user' or not genre:
-                    # auto-detect genre
-                    if opts.lastgenre:
-                        genre = self._lastfm_genre(item)
-                        if genre is not None:
-                            source = 'lastfm'
-                    if genre is None and opts.xtractor:
-                        genre = self._essentia_genre(item)
-                        if genre is not None:
-                            source = 'essentia'
-                    if opts.from_title:
-                        genre, matched = self._fix_remix_genre(item, genre, genre_tree)
-                        if matched and genre is not None:
-                            source = 'title'
+            genre, source = self._item_genre(item, all, force, opts, genre_tree)
 
             if genre:
                 genre_primary = genre and self._str2list(genre)[0] or None
@@ -167,12 +142,44 @@ class AutoGenrePlugin(BeetsPlugin):
             genre_primary_changed = genre_primary != item.get('genre_primary')
             genre_source_changed = source != item.get('genre_source')
             changed = genre_changed or genre_primary_changed or genre_source_changed
-            if changed and genre is not None and not opts.pretend:
-                item.genre = genre
-                item.genre_primary = genre_primary
-                item.genre_source = source
-                item.store()
+            if changed and genre is not None:
+                msg = "Changing genre from '{}' to '{}' ({}) for item: {}"
+                self._log.info(msg, item.get('genre'), genre, source, item)
+                if not opts.pretend:
+                    item.genre = genre
+                    item.genre_primary = genre_primary
+                    item.genre_source = source
+                    item.store()
         # TODO: match remix artist within title and get genre from artist: TITLE (ARTIST remix)
+
+    def _item_genre(self, item, all, force, opts, genre_tree):
+        genre = item.get('genre')
+        source = item.get('genre_source')
+        orig_genre = genre
+        orig_source = source
+        genre_primary = item.get('genre_primary')
+        if _filter_item(item, all, force):
+            if opts.genre is not None:
+                source = opts.genre and 'user' or None
+                genre = self._format_genre(opts.genre.lower())
+            elif source == 'user' and genre_primary:
+                if not genre:
+                    genre = genre_primary
+            if source != 'user' or not genre:
+                # auto-detect genre
+                if opts.lastgenre:
+                    genre = self._lastfm_genre(item)
+                    if genre is not None:
+                        source = 'lastfm'
+                if genre is None and opts.xtractor:
+                    genre = self._essentia_genre(item)
+                    if genre is not None:
+                        source = 'essentia'
+                if opts.from_title:
+                    genre, matched = self._fix_remix_genre(item, genre, genre_tree)
+                    if matched and genre is not None:
+                        source = 'title'
+        return genre, source
 
     def _is_remix(self, title):
         return self._remix_regex.match(title) is not None
@@ -194,8 +201,8 @@ class AutoGenrePlugin(BeetsPlugin):
         else:
             genre, src = self._lastgenre._get_genre(item)
         if genre:
-            msg = "[autogenre] Got last.fm genre '{}' based on {} for item: {}"
-            print(msg.format(genre, src, item))
+            msg = "Got last.fm genre '{}' based on {} for item: {}"
+            self._log.debug(msg, genre, src, item)
         return genre
 
     def _fix_remix_genre(self, item, genre, genre_tree):
@@ -217,13 +224,13 @@ class AutoGenrePlugin(BeetsPlugin):
             prepend_genre = self._format_genre(prepend_genre)
             genres = [g for g in genres if g != prepend_genre]
             genre = self._list2str([prepend_genre] + genres)
-            print("[autogenre] Fixed genre '{}' based on {} of item: {}".format(genre, source, item))
+            self._log.debug("Fixed genre '{}' based on {} of item: {}", genre, source, item)
             return genre, True
         return genre, False
 
     def _essentia_genre(self, item):
         if not item.get('bpm'): # run essentia analysis if result not known yet
-            print('[autogenre] Analyzing item using essentia: {}'.format(item))
+            self._log.debug('Analyzing item using essentia: {}', item)
             self._xtractor._run_analysis(item)
         # Use Essentia's mapped genre_rosamerica value
         genre_rosamerica = item.genre_rosamerica
@@ -258,8 +265,8 @@ class AutoGenrePlugin(BeetsPlugin):
                 genre = 'electronic'
 
         genre = self._format_genre(genre)
-        msg = "[autogenre] Got essentia genre '{}' for item: {}"
-        print(msg.format(genre, item))
+        msg = "Got essentia genre '{}' for item: {}"
+        self._log.debug(msg, genre, item)
         return genre
 
     def _format_genre(self, genre):
