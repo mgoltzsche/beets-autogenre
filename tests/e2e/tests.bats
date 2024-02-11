@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 assertGenre() {
-	FMT='$genre_source | $genre_primary | $genre'
+	FMT='$genre_source | $genre | $genres'
 	ACTUAL="$(beet ls $1 -f "$FMT")"
 	[ "$ACTUAL" = "$2" ] || (
 		echo "ERROR: Expected query '$1' with format '$FMT' to evaluate to '$2' but was '$ACTUAL'" >&2

@@ -3,6 +3,7 @@ import mediafile
 import os
 import re
 import yaml
+from beets import ui
 from beets.plugins import BeetsPlugin
 from beets.dbcore import types
 from beets.dbcore.query import FixedFieldSort
@@ -127,44 +128,46 @@ class AutoGenrePlugin(BeetsPlugin):
         filtered_items = [item for item in items if _filter_item(item, all, force)]
         self._log.info('Selected {} items for genre update...', len(filtered_items))
         for item in items:
-            genre, source = self._item_genre(item, all, force, opts, genre_tree)
+            genres, source = self._item_genres(item, all, force, opts, genre_tree)
+            genrel = self._str2list(genres)
+            genre = genres and genrel[0] or None
 
-            if genre:
-                genre_primary = genre and self._str2list(genre)[0] or None
-                if opts.parent_genres and genre_primary:
-                    parent_genres = genre_tree.parents(genre_primary)
+            if genres:
+                if opts.parent_genres and genre:
+                    # Append primary genre's parent genres to genre list
+                    parent_genres = genre_tree.parents(genre)
                     parent_genres = [self._format_genre(g) for g in parent_genres]
-                    genres = self._str2list(genre)
-                    genres = genres + [g for g in parent_genres if g not in genres]
-                    genre = self._list2str(genres)
+                    genrel = genrel + [g for g in parent_genres if g not in genrel]
+                    genres = self._list2str(genrel)
 
             genre_changed = genre != item.get('genre')
-            genre_primary_changed = genre_primary != item.get('genre_primary')
+            genres_changed = genres != item.get('genres')
             genre_source_changed = source != item.get('genre_source')
-            changed = genre_changed or genre_primary_changed or genre_source_changed
-            if changed and genre is not None:
+            changed = genre_changed or genres_changed or genre_source_changed
+            if changed and genres is not None:
                 msg = "Changing genre from '{}' to '{}' ({}) for item: {}"
                 self._log.info(msg, item.get('genre'), genre, source, item)
+                write = ui.should_write()
                 if not opts.pretend:
                     item.genre = genre
-                    item.genre_primary = genre_primary
+                    item.genres = genres
                     item.genre_source = source
+                    if write:
+                        item.try_write()
                     item.store()
         # TODO: match remix artist within title and get genre from artist: TITLE (ARTIST remix)
 
-    def _item_genre(self, item, all, force, opts, genre_tree):
-        genre = item.get('genre')
+    def _item_genres(self, item, all, force, opts, genre_tree):
+        genre = item.get('genres')
+        if not genre:
+            genre = item.get('genre')
         source = item.get('genre_source')
         orig_genre = genre
         orig_source = source
-        genre_primary = item.get('genre_primary')
         if _filter_item(item, all, force):
             if opts.genre is not None:
                 source = opts.genre and 'user' or None
                 genre = self._format_genre(opts.genre.lower())
-            elif source == 'user' and genre_primary:
-                if not genre:
-                    genre = genre_primary
             if source != 'user' or not genre:
                 # auto-detect genre
                 if opts.lastgenre:
