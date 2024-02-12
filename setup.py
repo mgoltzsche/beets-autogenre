@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='beets-autogenre',
-    version='0.0.0-dev',
+    version='0.3.0',
     author='Max Goltzsche',
     description='Detect the genres for each song within your beets library',
     long_description=long_description,
