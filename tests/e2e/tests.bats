@@ -39,7 +39,7 @@ assertGenre() {
 	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=hyVVoLy4LSc
 	QUERY='title:Paris City Jazz'
 	beet autogenre $QUERY
-	assertGenre "$QUERY" 'lastfm | House | House, Downtempo, Jazz, Electronic'
+	assertGenre "$QUERY" 'lastfm | Nu Jazz | Nu Jazz, House, Downtempo, Jazz, Electronic'
 }
 
 @test 'derive genre from track title' {
@@ -56,6 +56,9 @@ assertGenre() {
 	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
 	beet autogenre -fa $QUERY
 	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Drum And Bass, Electronic'
+	echo ALBUM GENRE:
+	beet ls -a 'Reggae Jungle Drum and Bass Mix #9 New 2022' -f '$genre'
+	[ "`beet ls -a 'Reggae Jungle Drum and Bass Mix #9 New 2022' -f '$genre'`" = 'Ragga Drum And Bass' ] || (echo 'Should set album genre!'; false)
 }
 
 @test 'estimate genre using essentia' {
@@ -68,9 +71,14 @@ assertGenre() {
 
 
 @test 'specify genre manually' {
-	QUERY='album:Reggae Jungle Drum and Bass Mix #9 New 2022 Rudy, a message to you'
+	ALBUM='Reggae Jungle Drum and Bass Mix #9 New 2022'
+	beet autogenre -fa "album:$ALBUM"
+	QUERY="album:$ALBUM Rudy, a message to you"
 	beet autogenre --genre='Electronic' $QUERY
 	assertGenre "$QUERY" 'user | Electronic | Electronic'
+	# Should not touch genre of other items
+	QUERY="album:$ALBUM Sizzla Livin"
+	assertGenre "$QUERY" 'title | Ragga Drum And Bass | Ragga Drum And Bass, Dancehall, Reggae, Drum And Bass, Electronic'
 }
 
 @test 'preserve manually specified genre' {
