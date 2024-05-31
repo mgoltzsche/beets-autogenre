@@ -1,3 +1,4 @@
+auto: false
 pretend: false
 all: false
 force: false

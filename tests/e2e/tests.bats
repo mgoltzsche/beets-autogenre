@@ -9,6 +9,32 @@ assertGenre() {
 	)
 }
 
+tempConfigWithAutoEnabled() {
+	TMP_CONF=/tmp/beets-autogenre-test-config.yaml
+	cp -f /etc/beets/default-config.yaml $TMP_CONF
+	printf '\nautogenre:\n  auto: true\n' >> $TMP_CONF
+}
+
+@test 'auto-detect song genre on import' {
+	# Tuba Skinny - Jubilee Stomp
+	tempConfigWithAutoEnabled
+	beet -c $TMP_CONF ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=jft3BVoxqjo
+	QUERY='Jubilee Stomp'
+	assertGenre "$QUERY" 'lastfm | Jazz | Jazz, Blues'
+}
+
+@test 'auto-detect album genre on import' {
+	# Miles Davis - Autumn Leaves
+	tempConfigWithAutoEnabled
+	beet -c $TMP_CONF ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=APKdKHIiNuE
+	QUERY='Miles Davis Autumn Leaves Walkin'
+	assertGenre "$QUERY" 'lastfm | Jazz | Jazz, Blues'
+	QUERY='Autumn Leaves'
+	[ "`beet ls -a "$QUERY"`" ] || (echo 'FAIL: No album imported!'; false)
+	echo "ALBUM GENRE: `beet ls -a "$QUERY" -f '$genre'`"
+	[ "`beet ls -a "$QUERY" -f '$genre'`" = 'Jazz' ] || (echo 'FAIL: Did not set album genre!'; false)
+}
+
 @test 'get genre from last.fm' {
 	# Amadou & Mariam - Sénégal Fast Food
 	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=J43T8rEOg-I

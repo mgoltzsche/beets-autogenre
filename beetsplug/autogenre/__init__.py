@@ -59,7 +59,9 @@ class AutoGenrePlugin(BeetsPlugin):
         self._separator = self._lastgenre_conf.get('separator') or ', '
         self._remix_regex = re.compile(r'.+[^\w](remix|bootleg|remake)', re.IGNORECASE)
         self._genre_tree = None
-        # TODO: add auto-detect support
+        # TODO: fix auto support - fix genres field mapping, see https://github.com/beetbox/mediafile/blob/master/mediafile.py#L1814
+        if self.config['auto'].get(bool):
+            self.import_stages = [self.imported]
 
     def imported(self, session, task):
         """Event hook called when an import task finishes."""
@@ -80,7 +82,8 @@ class AutoGenrePlugin(BeetsPlugin):
         if not self.config['pretend'].get():
             if config['import']['write'].get():
                 item.try_write()
-            item.store(['genre', 'genres', 'genre_source'])
+            item.store(['genre'])
+            item.store(['genres', 'genre_source'])
 
     def _update_album_genre(self, album):
         genre = _most_common([item.genre for item in album.items()])
