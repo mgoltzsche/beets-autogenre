@@ -203,8 +203,6 @@ class AutoGenrePlugin(BeetsPlugin):
         if not genre:
             genre = item.get('genre')
         source = item.get('genre_source')
-        orig_genre = genre
-        orig_source = source
         if _filter_item(item, all, force):
             if force_genre is not None:
                 source = force_genre and 'user' or None
@@ -273,9 +271,13 @@ class AutoGenrePlugin(BeetsPlugin):
         return genre, False
 
     def _essentia_genre(self, item):
-        if not item.get('bpm'): # run essentia analysis if result not known yet
+        if not item.get('bpm') or not item.get('genre_rosamerica'):
+            # Run essentia analysis if result not known yet.
             self._log.debug('Analyzing item using essentia: {}', item)
             self._xtractor._run_analysis(item)
+        if 'genre_rosamerica' not in item:
+            # Essentia analysis may not provide data in some cases.
+            return None
         # Use Essentia's mapped genre_rosamerica value
         genre_rosamerica = item.genre_rosamerica
         genre_rosamerica_probability = float(item.genre_rosamerica_probability)

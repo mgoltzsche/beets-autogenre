@@ -91,8 +91,17 @@ tempConfigWithAutoEnabled() {
 	# EttoreTechnoChannel - Hector Couto- Amanece
 	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=8CI2GjcCkuM
 	QUERY='title:Hector Couto- Amanece'
-	beet autogenre -f $QUERY
+	beet autogenre -f --no-lastgenre $QUERY
 	assertGenre "$QUERY" 'essentia | Electronic | Electronic, Hip Hop, House'
+}
+
+@test "don't fail when essentia analysis did not provide data" {
+	# Amadou & Mariam feat. K'naan - Africa
+	beet ytimport -q --quiet-fallback=asis https://www.youtube.com/watch?v=WJ-rI2i9VGE
+	QUERY='artist:Amadou title:Africa'
+	beet autogenre -f --no-lastgenre $QUERY
+	assertGenre "$QUERY" ''
+	# TODO: implement fallback to using the most common genre of other tracks of the same artist
 }
 
 
