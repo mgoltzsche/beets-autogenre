@@ -330,7 +330,7 @@ class AutoGenrePlugin(BeetsPlugin):
         return self._genre_tree
 
     def _format_genre(self, genre):
-        return self._lastgenre._format_tag(genre)
+        return genre.title() if self._lastgenre_conf.get("title_case") else genre
 
     def _str2list(self, str):
         return str and str.split(self._separator) or []
