@@ -335,8 +335,8 @@ class AutoGenrePlugin(BeetsPlugin):
     def _str2list(self, str):
         return str and str.split(self._separator) or []
 
-    def _list2str(self, list):
-        return self._separator.join(list)
+    def _list2str(self, genrelist):
+        return self._separator.join([str(g) for g in genrelist if g is not None])
 
 
 def _filter_item(item, all, force):
