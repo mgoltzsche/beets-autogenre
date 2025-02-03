@@ -336,7 +336,9 @@ class AutoGenrePlugin(BeetsPlugin):
         return str and str.split(self._separator) or []
 
     def _list2str(self, genrelist):
-        return self._separator.join([str(g) for g in genrelist if g is not None])
+        max_count = self._lastgenre_conf["count"]
+        genres = genrelist[:max_count]
+        return self._separator.join([self._format_genre(str(g)) for g in genres if g is not None])
 
 
 def _filter_item(item, all, force):
