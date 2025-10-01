@@ -330,13 +330,16 @@ class AutoGenrePlugin(BeetsPlugin):
         return self._genre_tree
 
     def _format_genre(self, genre):
-        return self._lastgenre._format_tag(genre)
+        print("THIS IS WHAT title_case OPTION IS:", self._lastgenre_conf.get("title_case") )
+        return genre.title() if self._lastgenre_conf.get("title_case") else genre
 
     def _str2list(self, str):
         return str and str.split(self._separator) or []
 
-    def _list2str(self, list):
-        return self._separator.join(list)
+    def _list2str(self, genrelist):
+        max_count = self._lastgenre_conf["count"]
+        genres = genrelist[:max_count]
+        return self._separator.join([self._format_genre(str(g)) for g in genres if g is not None])
 
 
 def _filter_item(item, all, force):

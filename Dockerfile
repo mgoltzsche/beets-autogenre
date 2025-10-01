@@ -9,6 +9,16 @@ RUN set -eux; \
 	ln -s /opt/bats/bin/bats /usr/local/bin/bats; \
 	rm -rf /tmp/bats-core-$BATS_VERSION
 
+# Install beets patch + yt-dlp upgrade
+RUN set -eux; \
+	BUILD_DEPS='git'; \
+	apk add --update --no-cache $BUILD_DEPS; \
+	python3 -m pip install \
+		git+https://github.com/beetbox/beets.git@a1c0ebdeef267e227c26f9defc93799c86c8fe54#egg=beets \
+		ytmusicapi==1.9.1 \
+		yt-dlp==2025.01.26; \
+	apk del --purge $BUILD_DEPS
+
 # Install beets-autogenre from source
 COPY dist /plugin/dist
 RUN python -m pip install /plugin/dist/*
