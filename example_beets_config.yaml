@@ -45,6 +45,7 @@ smartplaylist:
 lastgenre:
   auto: false
   prefer_specific: true
+  title_case: true
   count: 4 # To also tag Rage Again the Machine as Hip Hop
   source: album
   min_weight: 15 # To prevent Amadou & Mariam from being tagged as New Wave
