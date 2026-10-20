@@ -14,9 +14,9 @@ RUN set -eux; \
 	BUILD_DEPS='git'; \
 	apk add --update --no-cache $BUILD_DEPS; \
 	python3 -m pip install \
-		git+https://github.com/beetbox/beets.git@a1c0ebdeef267e227c26f9defc93799c86c8fe54#egg=beets \
-		ytmusicapi==1.9.1 \
-		yt-dlp==2025.01.26; \
+		git+https://github.com/beetbox/beets.git@v2.5.1#egg=beets \
+		ytmusicapi==1.12.3 \
+		yt-dlp==2026.8.19; \
 	apk del --purge $BUILD_DEPS
 
 # Install beets-autogenre from source
