@@ -55,8 +55,11 @@ class AutoGenrePlugin(BeetsPlugin):
         assert _is_plugin_enabled('xtractor'), "The 'xtractor' plugin is not enabled!"
         self._lastgenre = LastGenrePlugin()
         self._xtractor = XtractorCommand(config['xtractor'])
-        self._lastgenre_conf = config['lastgenre'].get() or {}
-        self._separator = self._lastgenre_conf.get('separator') or ', '
+        # Use the live config view (including lastgenre defaults) instead of a
+        # snapshot of the user config: config['lastgenre'].get() only resolves
+        # the user config source, hiding options defaulted by LastGenrePlugin.
+        self._lastgenre_conf = self._lastgenre.config
+        self._separator = self._lastgenre_conf['separator'].get() or ', '
         self._remix_regex = re.compile(r'.+[^\w](remix|bootleg|remake)', re.IGNORECASE)
         self._genre_tree = None
         # TODO: fix auto support - fix genres field mapping, see https://github.com/beetbox/mediafile/blob/master/mediafile.py#L1814
@@ -202,6 +205,9 @@ class AutoGenrePlugin(BeetsPlugin):
         genre = item.get('genres')
         if not genre:
             genre = item.get('genre')
+        # Newer beets versions return an empty string instead of None for
+        # unset fields. Normalize so the fallbacks below are triggered.
+        genre = genre or None
         source = item.get('genre_source')
         if _filter_item(item, all, force):
             if force_genre is not None:
@@ -230,18 +236,30 @@ class AutoGenrePlugin(BeetsPlugin):
         genre = None
         src = None
         source = self._lastgenre.config['source'].get()
-        if self._is_remix(item.get('title')) and source != 'track':
-            # When item is remix, get genre frpm the last.fm track.
-            # (The artist's genre would be most likely wrong / the original.
-            # E.g. 'Fugees - Ready or not (Champion Bootleg)'.
-            # For other items the album/artist source is more reliable.)
-            self._lastgenre.config['source'] = 'track'
-            try:
+        force = self._lastgenre.config['force'].get()
+        # This plugin decides on its own when genres need to be re-evaluated.
+        # Force the lookup so lastgenre does not return the item's existing genre.
+        self._lastgenre.config['force'] = True
+        try:
+            if self._is_remix(item.get('title')) and source != 'track':
+                # When item is remix, get genre from the last.fm track.
+                # (The artist's genre would be most likely wrong / the original.
+                # E.g. 'Fugees - Ready or not (Champion Bootleg)'.
+                # For other items the album/artist source is more reliable.)
+                self._lastgenre.config['source'] = 'track'
+                try:
+                    genre, src = self._lastgenre._get_genre(item)
+                finally:
+                    self._lastgenre.config['source'].set(source)
+                if src is None or not src.startswith('track'):
+                    # The track has no genre on last.fm.
+                    # Keep the existing genre instead of falling back to
+                    # the artist's genre which would be the original's genre.
+                    genre = item.get('genre') or None
+            else:
                 genre, src = self._lastgenre._get_genre(item)
-            finally:
-                self._lastgenre.config['source'].set(source)
-        else:
-            genre, src = self._lastgenre._get_genre(item)
+        finally:
+            self._lastgenre.config['force'].set(force)
         if genre:
             msg = "Got last.fm genre '{}' based on {} for item: {}"
             self._log.debug(msg, genre, src, item)
@@ -305,7 +323,7 @@ class AutoGenrePlugin(BeetsPlugin):
             if genre_rosamerica in ('rhy', 'pop', 'hip'):
                 # Append electronic to genre list
                 genres = self._str2list(genre)
-                if 'electronic' not in genres:
+                if 'electronic' not in [g.lower() for g in genres]:
                     genre = self._list2str(genres + ['electronic'])
             elif genre == 'dance':
                 genre = 'electronic'
@@ -316,10 +334,12 @@ class AutoGenrePlugin(BeetsPlugin):
 
     def _genres(self):
         if not self._genre_tree:
-            genre_tree_file = self._lastgenre_conf.get('canonical')
+            genre_tree_file = self._lastgenre_conf['canonical'].get()
             if not genre_tree_file:
                 genre_tree_file = os.path.join(os.path.dirname(__file__), '..', 'lastgenre', 'genres-tree.yaml')
-            genre_wh_file = self._lastgenre_conf.get('whitelist')
+            genre_wh_file = self._lastgenre_conf['whitelist'].get()
+            if genre_wh_file is True:
+                genre_wh_file = None
             assert genre_wh_file, "Config option lastgenre.whitelist is not specified!"
             with open(genre_wh_file, 'r') as f:
                 genre_whitelist = [genre.strip().lower() for genre in f.readlines() if genre.strip()]
@@ -330,13 +350,18 @@ class AutoGenrePlugin(BeetsPlugin):
         return self._genre_tree
 
     def _format_genre(self, genre):
-        return self._lastgenre._format_tag(genre)
+        if not genre:
+            return genre
+        return genre.title() if self._lastgenre_conf['title_case'].get(bool) else genre
 
     def _str2list(self, str):
         return str and str.split(self._separator) or []
 
-    def _list2str(self, list):
-        return self._separator.join(list)
+    def _list2str(self, genrelist):
+        # NOTE: The lastgenre count limit is already applied by the lastgenre
+        # plugin itself. Do not apply it here again because genres that are
+        # prepended/appended by this plugin would be truncated.
+        return self._separator.join([self._format_genre(str(g)) for g in genrelist if g is not None])
 
 
 def _filter_item(item, all, force):

@@ -6,7 +6,12 @@ endef
 export DOCKERFILE
 BEETS_IMG=beets-autogenre
 BUILD_IMG=beets-autogenre-build
-DOCKER_OPTS=--rm -u `id -u`:`id -g` \
+# Podman needs a mapped user namespace to run as the host user's UID
+IS_PODMAN := $(shell docker version 2>/dev/null | grep -qi podman && echo 1)
+ifeq ($(IS_PODMAN),1)
+DOCKER_USERNS := --userns=keep-id
+endif
+DOCKER_OPTS=--rm $(DOCKER_USERNS) -u `id -u`:`id -g` \
                 -v "`pwd`:/work" -w /work \
                 --entrypoint sh $(BUILD_IMG) -c
 
@@ -18,7 +23,7 @@ wheel: clean python-container
 test: beets-container
 	# Run unit tests
 	mkdir -p data/beets
-	@docker run --rm -u `id -u`:`id -g` \
+	@docker run --rm $(DOCKER_USERNS) -u `id -u`:`id -g` \
 		-v "`pwd`:/plugin" -w /plugin \
 		-v "`pwd`/data:/data" \
 		--entrypoint sh $(BEETS_IMG) -c \
@@ -28,7 +33,7 @@ test: beets-container
 test-e2e: beets-container
 	# Run e2e tests
 	mkdir -p data/beets
-	@docker run --rm -u `id -u`:`id -g` -w /plugin \
+	@docker run --rm $(DOCKER_USERNS) -u `id -u`:`id -g` -w /plugin \
                 -v "`pwd`:/plugin" -w /plugin \
 		-v "`pwd`/data:/data" \
 		-v "`pwd`/example_beets_config.yaml:/data/beets/config.yaml" \

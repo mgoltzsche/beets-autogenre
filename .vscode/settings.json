@@ -1,0 +1,4 @@
+{
+    "html.format.wrapLineLength": 120,
+    "pylint.args": ["--max-line-length=140"]
+}
